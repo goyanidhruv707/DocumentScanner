@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+# Setting the width and height of the output image
 ###########################################
 imgWidth = 480
 imgHeight = 640
@@ -8,10 +9,10 @@ imgHeight = 640
 
 
 webcam = cv2.VideoCapture(1)
-#webcam.set(3, 640)
-#webcam.set(4, 480)
+webcam.set(3, 640)
+webcam.set(4, 480)
 
-
+# Function to preprocess the image. It returns the edge map of the image
 def preprocessing(img):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 1)
@@ -22,6 +23,7 @@ def preprocessing(img):
     return imgThresh
 
 
+# A function to get contours from the image, and returning the biggest contour.
 def getContours(img):
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     maxArea = 0
@@ -38,21 +40,19 @@ def getContours(img):
     return biggest
 
 
+# A function to reorder points according to the scanned document, to display the correct warped image.
 def reorderPoints(myPoints):
     myPoints = myPoints.reshape(4, 2)
     newPoints = np.zeros((4, 1, 2), np.int32)
     add = myPoints.sum(axis=1)
-
     newPoints[0] = myPoints[np.argmin(add)]
     newPoints[3] = myPoints[np.argmax(add)]
-
     difference = np.diff(myPoints, axis=1)
     newPoints[1] = myPoints[np.argmin(difference)]
     newPoints[2] = myPoints[np.argmax(difference)]
-
     return newPoints
 
-
+# A function to warp the image, and display the bird's eye view for the scanned document.
 def getWarp(img, biggest):
     biggest = reorderPoints(biggest)
     pt1 = np.float32(biggest)
@@ -62,8 +62,7 @@ def getWarp(img, biggest):
     return imgOutput
 
 
-
-
+# Loop for getting webcam feedback, and displaying the final output.
 while True:
     success, frame = webcam.read()
     frame = cv2.resize(frame, (imgWidth, imgHeight))
